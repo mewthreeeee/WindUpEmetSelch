@@ -4,8 +4,6 @@ from PIL import Image, ImageTk
 
 f = open('config.json')
 settings = json.load(f)
-for i in settings:
-    print(i)
 
 window = tk.Tk()
 window.geometry(f"{settings['size']}x{settings['size']}")
@@ -27,5 +25,15 @@ def showRightClickMenu(event):
         rightClickMenu.grab_release()
 
 solus.bind("<Button-3>", showRightClickMenu)
+
+x,y = 0,0
+def drag(event):
+    global x, y
+    offsetX, offsetY = event.x - x, event.y - y
+    newX, newY = window.winfo_x() + offsetX, window.winfo_y() + offsetY
+    newGeo = f"+{newX}+{newY}"
+    window.geometry(newGeo)
+
+window.bind("<B1-Motion>", drag)
 
 window.mainloop() 
