@@ -5,12 +5,14 @@ from screeninfo import get_monitors
 import random
 import math
 import time
+import bisect
 
-class App:
+class Minion:
     def __init__(self):
         self.settings = json.load(open('config.json'))
         self.settings['screenGeo'] = self.getScreenGeometry()
-        print(self.settings['screenGeo'])
+        
+        self.state = {}
 
         self.master = tk.Tk()
         self.x, self.y = 0, 0
@@ -29,7 +31,26 @@ class App:
         #label.configure(image=img)
 
     def run(self):
+        self.master.after(100, self.update)
         self.master.mainloop()
+
+    def update(self):
+        print("in update")
+
+        #Choosing random action based on the probabilities
+        r = random.random()
+        p = bisect.bisect_left(self.settings['probabilities'], r)
+        action = self.settings['actions'][p]
+        
+        match action:
+            case "idle":
+                print("idle")
+            case "moveRandomly":
+                print("moveRandomly")
+            case _:
+                print(f"Action \"{action}\" not found!")
+
+        self.master.after(500, self.update)
 
     def initializeWindow(self):
         self.master.attributes('-topmost', True)
@@ -53,7 +74,6 @@ class App:
         newX, newY = self.master.winfo_x() + offsetX, self.master.winfo_y() + offsetY
         newGeo = f"+{newX}+{newY}"
         self.master.geometry(newGeo)
-        print(newGeo)
     
     def handlerLeftClick(self, event):
         self.x, self.y = event.x, event.y
@@ -91,5 +111,5 @@ class App:
                 corner['y'] = maxY + m.height
         return corner
 
-app = App()
-app.run()
+minion = Minion()
+minion.run()
