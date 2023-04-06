@@ -1,8 +1,8 @@
 import pyperclip
 
 spread = { #Must add to 1
-    "idle": 0.7,
-    "moveRandomly": 0.3
+    "idle": 0.8,
+    "moveRandomly": 0.2
 }
 sortedSpread = sorted(spread.items(), key=lambda x:x[1])
 

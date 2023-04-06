@@ -6,13 +6,16 @@ import random
 import math
 import time
 import bisect
+import glm
 
 class Minion:
     def __init__(self):
         self.settings = json.load(open('config.json'))
         self.settings['screenGeo'] = self.getScreenGeometry()
         
-        self.state = {}
+        self.state = {
+            'performingAction': False
+        }
 
         self.master = tk.Tk()
         self.x, self.y = 0, 0
@@ -37,18 +40,20 @@ class Minion:
     def update(self):
         print("in update")
 
-        #Choosing random action based on the probabilities
-        r = random.random()
-        p = bisect.bisect_left(self.settings['probabilities'], r)
-        action = self.settings['actions'][p]
-        
-        match action:
-            case "idle":
-                print("idle")
-            case "moveRandomly":
-                print("moveRandomly")
-            case _:
-                print(f"Action \"{action}\" not found!")
+        if not self.state['performingAction']:
+            #Choosing random action based on the probabilities
+            r = random.random()
+            p = bisect.bisect_left(self.settings['probabilities'], r)
+            action = self.settings['actions'][p]
+            
+            match action:
+                case "idle":
+                    print("idle")
+                case "moveRandomly":
+                    print("moveRandomly")
+                    self.behaviorFly()
+                case _:
+                    print(f"Action \"{action}\" not found!")
 
         self.master.after(500, self.update)
 
@@ -85,15 +90,25 @@ class Minion:
             self.rightClickMenu.grab_release()
 
     def behaviorFly(self):
-        startingX, startingY = self.master.winfo_x(), self.master.winfo_y()
-        goalX, goalY = random.randint(0, self.settings['screenGeo']['x']), random.randint(0, self.settings['screenGeo']['y'])
+        self.state['performingAction'] = True
 
-        steps = 10
-        for i in range(steps):
-            newX, newY = math.floor(((goalX - startingX)/steps) * (i+1)), math.floor(((goalY - startingY)/steps) * (i+1))
-            self.master.geometry(f"+{startingX + newX}+{startingY + newY}")
+        startingPos = glm.vec2(self.master.winfo_x(), self.master.winfo_y())
+        goalPos = glm.vec2(random.randint(0, self.settings['screenGeo']['x']), random.randint(0, self.settings['screenGeo']['y']))
+        direction = glm.normalize(goalPos - startingPos)
+
+        self.behaviorFlyLoop(direction, startingPos, goalPos)
+    
+    def behaviorFlyLoop(self, direction, currentPos, goalPos):
+        if glm.length(goalPos - currentPos) > self.settings['speed']:
+            newPos = currentPos + (direction * self.settings['speed'])
+            self.master.geometry(f"+{math.floor(newPos.x)}+{math.floor(newPos.y)}")
             self.master.update()
-            time.sleep(0.1)
+
+            self.master.after(42, self.behaviorFlyLoop, direction, newPos, goalPos)
+        else:
+            self.master.geometry(f"+{math.floor(goalPos.x)}+{math.floor(goalPos.y)}")
+            self.master.update()
+            self.state['performingAction'] = False
     
     def placeholderDoNothing(self):
         return

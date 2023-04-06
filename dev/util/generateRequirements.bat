@@ -1,1 +1,1 @@
-pip freeze --exclude pyperclip > "../../requirements.txt"
+pip freeze --exclude pyperclip > "../../newRequirements.txt"
